@@ -17,7 +17,7 @@ def process_program(source):
 
     for item in history:
         commandstr = item[0] + f" {str(item[1])}" if len(item) > 1 else ""
-        print(f'echo "{commandstr}" > /dev/rfcomm0')
+        os.system(f'echo "{commandstr}" > /dev/rfcomm0')
         if item[0] == "fd" or item[0] == "bk":
             ## considering 100 setps takes 10 seconds, we can calculate the time taken for each step
             time.sleep(item[1]/10)
