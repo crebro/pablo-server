@@ -23,7 +23,7 @@ def process_program(source):
     history = parser.getParsedResult()
 
     s = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
-    s.connect((os.getenv("MAC_ADDRSS"), 1))
+    s.connect((os.getenv("MAC_ADDRESS"), 1))
 
     for item in history:
         commandstr = item[0] + f" {str(item[1])}" if len(item) > 1 else ""
@@ -31,9 +31,12 @@ def process_program(source):
         if item[0] == "fd" or item[0] == "bk":
             ## considering 100 setps takes 10 seconds, we can calculate the time taken for each step
             time.sleep(item[1]/10)
-        if item[0] == "rt" or item[0] == "lt":
+        elif item[0] == "rt" or item[0] == "lt":
             steps = item[1]
             time.sleep(steps*10/90)
+        else:
+            ## for other commands like pu, pd, we can sleep for 1 second
+            time.sleep(1)
 
     currentlyRunningProgram = False
 
