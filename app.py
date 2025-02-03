@@ -3,6 +3,11 @@ from utils.turtle_parser import Parser
 import os
 import threading
 import time
+import socket
+import dotenv
+import os
+
+dotenv.load_dotenv()
 
 app = Flask(__name__)
 currentlyRunningProgram = False
@@ -12,12 +17,17 @@ def home():
     return "Hello, World!"
 
 def process_program(source):
+    global currentlyRunningProgram
+
     parser = Parser(source=source)
     history = parser.getParsedResult()
 
+    s = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
+    s.connect((os.getenv("MAC_ADDRSS"), 1))
+
     for item in history:
         commandstr = item[0] + f" {str(item[1])}" if len(item) > 1 else ""
-        os.system(f'echo "{commandstr}" > /dev/rfcomm0')
+        s.send(commandstr.encode())
         if item[0] == "fd" or item[0] == "bk":
             ## considering 100 setps takes 10 seconds, we can calculate the time taken for each step
             time.sleep(item[1]/10)
@@ -30,8 +40,10 @@ def process_program(source):
 
 @app.route('/start', methods=['POST'])
 def start_execution():
+    global currentlyRunningProgram
     if currentlyRunningProgram:
         return jsonify({"status": "failed", "message": "Another program is already running"}), 400
+    currentlyRunningProgram = True
 
     """Start execution in a separate thread"""
     program_data = request.form.get('program', [])
