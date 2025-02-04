@@ -76,17 +76,7 @@ def start_execution():
 ## create a simple html page to input the program
 @app.route('/input', methods=['GET'])
 def input_program():
-    return """
-    <html>
-    <body>
-    <h1>Enter your program</h1>
-    <form action="/start" method="post">
-        <textarea name="program" rows="10" cols="50"></textarea>
-        <input type="submit" value="Submit">
-    </form>
-    </body>
-    </html>
-    """
+    return app.send_static_file('input.html')
 
 @app.route("/")
 @app.route("/<path>")
