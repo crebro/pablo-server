@@ -6,44 +6,49 @@ import time
 import socket
 import dotenv
 import os
+from flask_cors import CORS
 
 dotenv.load_dotenv()
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', static_url_path='/')
 currentlyRunningProgram = False
 
-@app.route("/")
-def home():
-    return "Hello, World!"
+CORS(app)
+
+
 
 def process_program(source):
     global currentlyRunningProgram
+    try:
+        parser = Parser(source=source)
+        history = parser.getParsedResult()
 
-    parser = Parser(source=source)
-    history = parser.getParsedResult()
+        s = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
+        s.connect((os.getenv("MAC_ADDRESS"), 1))
 
-    s = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
-    s.connect((os.getenv("MAC_ADDRESS"), 1))
+        print("Begin execution")
 
-    print("Begin execution")
+        for item in history:
+            commandstr = item[0] + f" {str(item[1])}" if len(item) > 1 else ""
+            s.send(commandstr.encode())
+            print(commandstr)
+            if item[0] == "fd" or item[0] == "bk":
+                ## considering 100 setps takes 10 seconds, we can calculate the time taken for each step
+                time.sleep(item[1]/10)
+            elif item[0] == "rt" or item[0] == "lt":
+                steps = item[1]
+                time.sleep(steps*10/90)
+            else:
+                ## for other commands like pu, pd, we can sleep for 1 second
+                time.sleep(1)
 
-    for item in history:
-        commandstr = item[0] + f" {str(item[1])}" if len(item) > 1 else ""
-        s.send(commandstr.encode())
-        print(commandstr)
-        if item[0] == "fd" or item[0] == "bk":
-            ## considering 100 setps takes 10 seconds, we can calculate the time taken for each step
-            time.sleep(item[1]/10)
-        elif item[0] == "rt" or item[0] == "lt":
-            steps = item[1]
-            time.sleep(steps*10/90)
-        else:
-            ## for other commands like pu, pd, we can sleep for 1 second
-            time.sleep(1)
+        s.close()
 
-    s.close()
+        print("Program Execution Complete")
 
-    print("Program Execution Complete")
+    except Exception as e:
+        print(f"Exception occured during exceution: {e}")
+        currentlyRunningProgram = False
 
     currentlyRunningProgram = False
 
@@ -57,6 +62,10 @@ def start_execution():
 
     """Start execution in a separate thread"""
     program_data = request.form.get('program', [])
+    if request.is_json:
+        program_data = request.json.get('program', [])
+
+    print(f"Recieved Program: {program_data}")
     
     # Start a background thread
     thread = threading.Thread(target=process_program, args=(program_data,))
@@ -78,6 +87,11 @@ def input_program():
     </body>
     </html>
     """
+
+@app.route("/")
+@app.route("/<path>")
+def home(path=""):
+    return app.send_static_file('index.html')
 
 
 if __name__ == "__main__":
