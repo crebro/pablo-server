@@ -32,7 +32,7 @@ def process_program(source):
         print("Begin execution")
 
         for item in commands:
-            commandstr = item[0] + f" {str(item[1])}" if len(item) > 1 else ""
+            commandstr = item[0] + (f" {str(item[1])}" if len(item) > 1 else "")
 
             if platform == "windows" and s:
                 s.send(commandstr.encode())
