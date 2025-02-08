@@ -10,6 +10,8 @@ from flask_cors import CORS
 
 dotenv.load_dotenv()
 
+platform = os.get("PLATFORM", "raspberrypi")
+
 app = Flask(__name__, static_folder='static', static_url_path='/')
 currentlyRunningProgram = False
 
@@ -23,15 +25,21 @@ def process_program(source):
         parser = Parser(source=source)
         history = parser.getParsedResult()
 
-        s = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
-        s.connect((os.getenv("MAC_ADDRESS"), 1))
+        s = None
+        if platform == "windows":
+            s = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
+            s.connect((os.getenv("MAC_ADDRESS"), 1))
 
         print("Begin execution")
 
         for item in history:
             commandstr = item[0] + f" {str(item[1])}" if len(item) > 1 else ""
-            s.send(commandstr.encode())
-            print(commandstr)
+
+            if platform == "windows" and s:
+                s.send(commandstr.encode())
+            elif platform == "raspberrypi":
+                os.system(f"echo '{commandstr}' > /dev/rfcomm0")
+
             if item[0] == "fd" or item[0] == "bk":
                 ## considering 100 setps takes 10 seconds, we can calculate the time taken for each step
                 time.sleep(item[1]/10)
@@ -41,8 +49,9 @@ def process_program(source):
             else:
                 ## for other commands like pu, pd, we can sleep for 1 second
                 time.sleep(1)
-
-        s.close()
+        
+        if platform == "windows" and s:
+            s.close()
 
         print("Program Execution Complete")
 
