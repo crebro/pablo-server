@@ -32,7 +32,7 @@ def process_program(source):
         print("Begin execution")
 
         for item in commands:
-            commandstr = item[0] + (f" {str(item[1])}" if len(item) > 1 else "")
+            commandstr = item[0] + (f" {str(round(item[1]))}" if len(item) > 1 else "")
 
             if platform == "windows" and s:
                 s.send(commandstr.encode())
@@ -41,10 +41,10 @@ def process_program(source):
 
             if item[0] == "fd" or item[0] == "bk":
                 ## considering 100 setps takes 10 seconds, we can calculate the time taken for each step
-                time.sleep(item[1]/10)
+                time.sleep(item[1]*8/100)
             elif item[0] == "rt" or item[0] == "lt":
                 steps = item[1]
-                time.sleep(steps*10/90)
+                time.sleep(steps*8/90)
             else:
                 ## for other commands like pu, pd, we can sleep for 1 second
                 time.sleep(1)
