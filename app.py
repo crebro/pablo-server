@@ -1,5 +1,4 @@
 from flask import Flask, request, jsonify
-from utils.turtle_parser import Parser
 from utils.codetocommands import codetocommands
 import os
 import threading

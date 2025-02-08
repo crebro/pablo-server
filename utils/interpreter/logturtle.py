@@ -330,24 +330,24 @@ class LogTurtle:
             return
         else:
             self._pendown = False
-        self._history.append("pu")
+        self._history.append(("pu"))
 
     def pendown(self):
         if self._pendown:
             return
         else:
             self._pendown = True
-        self._history.append("pd")
+        self._history.append(("pd"))
 
     def right(self, angle):
         heading = self._heading - angle
         self._heading = heading % 360
-        self._history.append("rt {}".format(angle))
+        self._history.append(("rt", angle))
 
     def left(self, angle):
         heading = self._heading + angle
         self._heading = heading % 360
-        self._history.append("lt {}".format(angle))
+        self._history.append(("lt", angle))
 
     def forward(self, dist):
         dx, dy = calc_distance(self._heading, dist)
@@ -355,7 +355,7 @@ class LogTurtle:
         x += dx
         y += dy
         self._pos = (x, y)
-        self._history.append("fd {}".format(dist))
+        self._history.append(("fd", dist))
 
     def backward(self, dist):
         dx, dy = calc_distance(self._heading, -dist)
@@ -363,7 +363,7 @@ class LogTurtle:
         x += dx
         y += dy
         self._pos = (x, y)
-        self._history.append("bk {}".format(dist))
+        self._history.append(("bk", dist))
 
     def clear(self):
         self.components = []
