@@ -167,7 +167,7 @@ class LogTurtle:
     """
 
     screen = attr.ib(default=None)
-    _pendown = attr.ib(default=True)
+    _pendown = attr.ib(default=False)
     _pencolor = attr.ib(default="white")
     _pensize = attr.ib(default=1)
     _fillcolor = attr.ib(default="white")
