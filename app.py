@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from utils.turtle_parser import Parser
+from utils.codetocommands import codetocommands
 import os
 import threading
 import time
@@ -10,7 +11,7 @@ from flask_cors import CORS
 
 dotenv.load_dotenv()
 
-platform = os.get("PLATFORM", "raspberrypi")
+platform = os.getenv("PLATFORM", "raspberrypi")
 
 app = Flask(__name__, static_folder='static', static_url_path='/')
 currentlyRunningProgram = False
@@ -22,8 +23,7 @@ CORS(app)
 def process_program(source):
     global currentlyRunningProgram
     try:
-        parser = Parser(source=source)
-        history = parser.getParsedResult()
+        commands = codetocommands(source)
 
         s = None
         if platform == "windows":
@@ -32,7 +32,7 @@ def process_program(source):
 
         print("Begin execution")
 
-        for item in history:
+        for item in commands:
             commandstr = item[0] + f" {str(item[1])}" if len(item) > 1 else ""
 
             if platform == "windows" and s:
