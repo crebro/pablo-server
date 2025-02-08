@@ -330,14 +330,14 @@ class LogTurtle:
             return
         else:
             self._pendown = False
-        self._history.append(("pu"))
+        self._history.append(("pu",))
 
     def pendown(self):
         if self._pendown:
             return
         else:
             self._pendown = True
-        self._history.append(("pd"))
+        self._history.append(("pd",))
 
     def right(self, angle):
         heading = self._heading - angle
