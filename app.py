@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from utils.codetocommands import codetocommands
+from utils.visualprocessing import process_image
 import os
 import threading
 import time
@@ -81,10 +82,34 @@ def start_execution():
     
     return jsonify({"status": "running", "message": "Execution started"}), 202
 
+
+@app.route('/visualstart', methods=['POST'])
+def visualstart():
+    global currentlyRunningProgram
+    if currentlyRunningProgram:
+        return jsonify({"status": "failed", "message": "Another program is already running"}), 400
+    
+    """Start execution in a separate thread"""
+    # Get the image from the requets
+    image = request.files.get('image', None)
+    result = process_image(image)
+
+    if result["status"] == "failed":
+        print("failed thing")
+        return jsonify(result), 400
+
+    currentlyRunningProgram = True
+    # Start a background thread
+    thread = threading.Thread(target=process_program, args=(" ".join(result['commands']),))
+    thread.start()    
+
+    return jsonify({"status": "running", "message": "Execution started", "commands": result['commands']}), 202
+
 ## create a simple html page to input the program
 @app.route('/input', methods=['GET'])
 def input_program():
     return app.send_static_file('input.html')
+
 
 @app.route("/")
 @app.route("/<path>")
